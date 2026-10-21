@@ -193,7 +193,11 @@ const end = src.indexOf('function rateLimitRowsHtml');
 if (start < 0 || end < 0) throw new Error('rate limit helpers not found');
 const ctx = { Date, Number, String, Math };
 vm.createContext(ctx);
-vm.runInContext(src.slice(start, end) + '\nthis.rateLimitMeta=rateLimitMeta;', ctx);
+// app.js 首行是 'use strict'；切片从 function 中间开始会把该指令丢掉，于是
+// 「给未声明变量赋值」在测试沙箱里静默生成全局变量，只在真实页面（严格模式）
+// 抛 ReferenceError。这里显式补回严格模式：detail 漏声明导致的账号池渲染中断
+// 必须由本测试兜住，而不是等用户发现表格空白。
+vm.runInContext("'use strict';\n" + src.slice(start, end) + '\nthis.rateLimitMeta=rateLimitMeta;', ctx);
 const now = new Date(2026, 8, 28, 14, 0, 0).getTime();
 const reset = new Date(2026, 8, 28, 16, 0, 0).getTime();
 const until = new Date(2026, 8, 28, 15, 0, 0).getTime();

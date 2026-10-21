@@ -264,6 +264,10 @@ function rateLimitMeta(row, now) {
     };
   }
   const title = [model, resetAt ? '上游重置：' + fmtLocalDateTime(resetAt) : '上游重置：时间未知'];
+  // detail 在下面两个分支都会赋值、最后统一返回。本文件首行是 'use strict'，
+  // 漏掉声明会变成「给未声明变量赋值」而抛 ReferenceError——且只有账号池里存在
+  // 限流账号时才会走到这里，表现为整个账号表格渲染中断（issue: 账号池空白）。
+  let detail;
   if (until && resetAt && until < resetAt) {
     // 双时钟（issue #171 问题二）：黄框出现/消失由 until 决定（网关为防超长
     // 限流拖死全池，把重试封顶在 now+softRateMax），主文字却按 resetAt 显示，
